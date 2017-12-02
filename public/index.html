@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chatter Box</title>
+
+	<!-- Imported Files -->
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	<link rel="stylesheet" href="/stylesheets/mystyles.css">
+	<script src="/javascripts/myscripts.js"></script>
+
+	<!-- icon -->
+	<link rel="apple-touch-icon-precomposed" href="images/favicon.ico" />
+	<link rel="shortcut icon" href="images/favicon.ico" />
+	<link rel="icon" href="images/favicon.ico" />
+</head>
+<body>
+	<!-- Header Logo Division -->
+	<a href="index.html"><img id="logo" src="images/header.png"></a>
+
+	<!-- Login Division -->
+	<div id='login_form'>
+		Username  <input type="text" placeholder="your username">
+		<br><br>
+		Password  <input type="password" placeholder="your password">
+		<br><br>
+		<button class="signin_button" type="button" id="signin">Sign in</button>
+	</div>
+
+	<!-- Chatter Box Division -->
+	<div id="chatterbox">
+	</div>
+</body>
+</html>
