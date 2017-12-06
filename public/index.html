@@ -4,8 +4,8 @@
 	<title>Chatter Box</title>
 
 	<!-- Imported Files -->
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 	<link rel="stylesheet" href="/stylesheets/mystyles.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 	<script src="/javascripts/myscripts.js"></script>
 
 	<!-- icon -->
@@ -13,21 +13,66 @@
 	<link rel="shortcut icon" href="images/favicon.ico" />
 	<link rel="icon" href="images/favicon.ico" />
 </head>
-<body>
+
+<body ng-app="chatterBox" ng-controller="chatterBoxController" ng-init="pageLoad()">
 	<!-- Header Logo Division -->
 	<a href="index.html"><img id="logo" src="images/header.png"></a>
 
 	<!-- Login Division -->
-	<div id='login_form'>
-		Username  <input type="text" placeholder="your username">
+	<div id='before-login' ng-show="notLogin">
+		<h3>{{loginErrorMsg}}</h3>
+		Username  <input type="text" placeholder="your username" ng-model="userInput.username"></input>
 		<br><br>
-		Password  <input type="password" placeholder="your password">
+		Password  <input type="password" placeholder="your password" ng-model="userInput.password"></input>
 		<br><br>
-		<button class="signin_button" type="button" id="signin">Sign in</button>
+		<button class="signin_button" type="button" id="signin" ng-click="logIn()">Sign in</button>
 	</div>
 
 	<!-- Chatter Box Division -->
-	<div id="chatterbox">
+	<div id="after-login" ng-hide="notLogin">
+		<div id="welcome-message">
+			<h3>
+				<img id='currentUserIcon' ng-src="{{currentUser.icon}}" ng-if="notLogin === false" ng-click="displayUserInfo()"></img> Hello, {{currentUser.username}}!
+				<button class="logout_button" type="button" id="logout" ng-click="logOut()">Log out</button>
+			</h3>
+		</div>
+		<div id="friendList">
+			<h4>&nbspMy Friends:</h4>
+			<ul>
+				<li ng-repeat="friend in friends" ng-if="friend.numUnreadMsgs > 0" ng-click="loadConversation(friend._id)" class="{{(friend._id === selectedFriend._id)?'selected':''}}" id="{{friend._id}}"> {{friend.name}} ({{friend.numUnreadMsgs}})</li>
+              	<li ng-repeat="friend in friends" ng-if="friend.numUnreadMsgs == 0" ng-click="loadConversation(friend._id)" class="{{(friend._id === selectedFriend._id)?'selected':''}}" id="{{friend._id}}"> {{friend.name}}</li>
+			</ul>
+		</div>
+		<div id="conversation">
+			<h3 ng-hide="notSelect"><img id='selectedUserIcon' ng-src="{{selectedFriend.icon}}" ng-if="notLogin === false"></img>&nbsp&nbsp{{selectedFriend.username}} ({{selectedFriend.status}})</h3>
+
+			<div ng-hide="notSelect" id="messages">
+				<p ng-if="messages.length == 0">No Messages Yet ... Enter a message to chat with {{selectedFriend.username}}!</p>
+				<p ng-repeat="sentence in messages" id="sentence._id" ng-dblClick="deleteMessage(sentence._id)">
+					<span ng-if="sentence.sentByMe === true"> 
+						<span class="fromHim"><img id='selectedUserIconInConversation' ng-src="{{selectedFriend.icon}}" ng-if="notLogin === false"></img>&nbsp&nbsp {{sentence.message}}</span> <span class="time">{{sentence.time}}</span><br><br>
+					</span>
+					<span ng-if="sentence.sentByMe === true">
+						<span class="time">{{sentence.time}}</span>
+						<span class="fromMe">{{sentence.message}}&nbsp&nbsp&nbsp</span><br><br>
+					</span>
+				</p>
+			</div>
+			
+			<input ng-hide="notSelect" type="text" placeholder="Type your message here, press Enter to send ..." ng-model="messageText" ng-keypress="($event.charCode==13)? postNewMessage(selectedFriend._id) : return" id="textMessageArea"></input>
+
+			<div id="myInfo" ng-show="isCurrentUser">
+				<img id='currentUserIconInUserPage' ng-src="{{currentUser.icon}}" ng-if="notLogin === false"></img>
+				<h3>&nbspName:{{currentUser.username}}</h3>
+				&nbspMobile Number&nbsp <input type="text" placeholder="enter your mobile number" ng-model="currentUser.mobileNumber"></input>
+				<br><br>
+				&nbspHome Number&nbsp&nbsp <input type="text" placeholder="enter your home number" ng-model="currentUser.homeNumber"></input>
+				<br><br>
+				&nbspMailing Address <input type="text" placeholder="enter your mailing address" ng-model="currentUser.address"></input>
+				<br><br>
+				<button class="save_button" type="button" id="save" ng-click="updateUserInfo()">Save</button>
+			</div>
+		</div>
 	</div>
 </body>
 </html>

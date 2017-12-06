@@ -1,5 +1,5 @@
 body {
- 	padding: 0 2em;
+ 	  padding: 0 2em;
   	font-family: Montserrat, sans-serif;
   	font: 140% Arial,Helvetica,sans-serif;
   	-webkit-font-smoothing: antialiased;
@@ -8,14 +8,14 @@ body {
 }
 
 #logo {
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
-	margin-bottom: 50px;
+  	display: block;
+  	margin-left: auto;
+  	margin-right: auto;
+  	margin-bottom: 50px;
 }
 
-#login_form {
-	text-align: center;
+#before-login {
+	  text-align: center;
 }
 
 input[type=text], input[type=password] {
@@ -33,29 +33,45 @@ input[type=text], input[type=password] {
     font-size: 16px;
 }
 
-input[type=text]:focus, input[type=password]:focus {
-	-moz-box-shadow: 0 0 8px #88D5E9;
+input[type=text]:focus, input[type=password]:focus, #textMessageArea:focus {
+	  -moz-box-shadow: 0 0 8px #88D5E9;
     -webkit-box-shadow: 0 0 8px #88D5E9;
     box-shadow: 0 0 8px #88D5E9;
     border: 1px solid #88D5E9;
 }
 
-input[type=text]:hover, input[type=password]:hover {
-	/*background: #4691A4;
-	color: #000000;*/
+input[type=text]:hover, input[type=password]:hover, #textMessageArea:hover {
+	  /*background: #4691A4;
+	  color: #000000;*/
     box-shadow:none;
     -moz-box-shadow:none;
     -webkit-box-shadow:none;
     border: 4px solid #8fc4d6;
 }
 
+#textMessageArea {
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    border: 1px solid #BEBEBE;
+    padding: 7px;
+    margin: 0px;
+    -webkit-transition: all 0.30s ease-in-out;
+    -moz-transition: all 0.30s ease-in-out;
+    -ms-transition: all 0.30s ease-in-out;
+    -o-transition: all 0.30s ease-in-out;
+    outline: none;
+    font-size: 16px; 
+    width: 450px;
+}
+
 .signin_button {
-	display: inline-block;
-	padding: 15px 25px;
-	font-size: 24px;
-	cursor: pointer;
- 	text-align: center;
- 	text-decoration: none;
+	  display: inline-block;
+	  padding: 15px 25px;
+	  font-size: 24px;
+	  cursor: pointer;
+ 	  text-align: center;
+ 	  text-decoration: none;
   	outline: none;
   	color: #fff;
   	background-color: #7cbde2;
@@ -65,11 +81,146 @@ input[type=text]:hover, input[type=password]:hover {
 }
 
 .signin_button:hover {
-	background-color: #578de5;
+	  background-color: #578de5;
 }
 
 .signin_button:active {
-	background-color: #578de5;
-	box-shadow: 0 5px #666;
- 	transform: translateY(4px);
+	  background-color: #578de5;
+	  box-shadow: 0 5px #666;
+ 	  transform: translateY(4px);
+}
+
+#welcome-message {
+    display:block;
+    width:1000px;
+}
+
+#welcome-message h3 {
+    position: relative;
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+
+#currentUserIcon {
+    display: inline-block;
+}
+
+.logout_button {
+    display: inline-block;
+    padding: 10px 18px;
+    font-size: 18px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    outline: none;
+    color: #fff;
+    background-color: #7cbde2;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px #999;
+    margin-left: 650px;
+}
+
+.logout_button:hover {
+    background-color: #578de5;
+}
+
+.logout_button:active {
+    background-color: #578de5;
+    box-shadow: 0 2px #666;
+    transform: translateY(2px);
+}
+
+div#friendList{
+  display: inline-block;
+  border: 2px solid black;
+  vertical-align:top;
+  width:200px;
+  height:500px;
+  overflow-y:scroll;
+  box-shadow: 5px 5px 2px lightblue;
+  border-radius: 5px;
+  margin-top:5px;
+  margin-right: 6px;
+  margin-bottom: 40px;
+  padding-bottom: 18px;
+}
+
+ul {
+  padding: 0px;
+}
+
+li{
+  list-style: none;
+  padding: 3px;
+  background: #cce5ff;
+}
+
+.selected {
+  background: #4286f4;
+}
+
+li:hover {
+  background: #4286f4;
+}
+
+div#conversation{
+  display:inline-block;
+  border: 2px solid black;
+  vertical-align:top;
+  width:800px;
+  height:500px;
+  overflow-y:scroll;
+  box-shadow: 5px 5px 2px lightblue;
+  border-radius: 5px;
+  margin-top:5px;
+  margin-bottom: 40px;
+  padding: 15px;
+}
+
+#textMessageArea {
+    margin-left: 150px;
+}
+
+#currentUserIconInUserPage {
+  margin: 40px;
+  margin-bottom: 30px;
+}
+
+.save_button {
+    display: inline-block;
+    padding: 10px 18px;
+    font-size: 18px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    outline: none;
+    color: #fff;
+    background-color: #7cbde2;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px #999;
+    margin-left: 650px;
+}
+
+.save_button:hover {
+    background-color: #578de5;
+}
+
+.save_button:active {
+    background-color: #578de5;
+    box-shadow: 0 2px #666;
+    transform: translateY(2px);
+}
+
+.fromHim {
+  float: left;
+}
+
+.fromMe {
+    float: right;
+}
+
+.time {
+    float: right;
 }

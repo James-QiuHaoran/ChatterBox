@@ -1,5 +1,7 @@
 var express = require('express');
 var router = express.Router();
+//var bodyParser = require('body-parser');
+//var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
 /* Handle GET request for information of a user if session variable has been set, empty string otherwise. */
 router.get('/load', function(req, res) {
@@ -43,15 +45,15 @@ router.get('/load', function(req, res) {
 								friendList.push({'name': users[idx].name, '_id': users[idx]._id, 'numUnreadMsgs': numUnreadMsgs});
 							}
 						}
-						res.json('username': name, 'icon': icon, 'friendList': friendList);
+						res.json({'username': name, 'icon': icon, 'friendList': friendList});
 					} else {
 						// database operation error
-						res.send({'errorMessage': error});
+						res.send({'errorMessage': error + " - Error loading all friends of this user!"});
 					}
 				});
 			} else {
 				// database operation error
-				res.send({'errorMessage': error});
+				res.send({'errorMessage': error + " - Error loading user list!"});
 			}
 		});
 	} else {
@@ -61,7 +63,7 @@ router.get('/load', function(req, res) {
 });
 
 /* Handle POST request to login. */
-router.post('/login', bodyParser.json(), function(req, res) {
+router.post('/login', function(req, res) {
 	var db = req.db;
 	var name = "";
 	var icon = "";
@@ -70,15 +72,15 @@ router.post('/login', bodyParser.json(), function(req, res) {
 
 	userList.find({'name': req.body.username}, {}, function(error, loginUser) {
 		if (error === null) {
-			if ((loginUser.length > 0) && (loginUser[0].password === req.body.password)) {
+			if ((loginUser.length > 0) && (loginUser[0].password == req.body.password)) {
 				// the username exists and password matches
 				// create a session variable
 				req.session.userID = loginUser[0]._id;
 
 				// update the status to be online
-				userList.update({'name': req.body.username}, {'status': 'online'}, function(error, returnValue) {
-					if (error === null) {
-						res.send({'errorMessage': error});
+				userList.update({'name': req.body.username}, {$set:{'status': 'online'}}, function(error, returnValue) {
+					if (error != null) {
+						res.send({'errorMessage': error + " - Error updating status to online."});
 					}
 				});
 
@@ -93,14 +95,16 @@ router.post('/login', bodyParser.json(), function(req, res) {
 						for (var idx in users) {
 							var idxInFriends = -1;
 							for (var friendIdx in friends) {
-								if (friends[friendIdx].name === users[idx].name)
+								if (friends[friendIdx].name == users[idx].name) {
 									idxInFriends = friendIdx;
+									break;
+								}
 							}
 							if (idxInFriends != -1) {
 								// this user is one of the friends of the previous user
 								var lastMsgMine = friends[idxInFriends].lastMsgId;
 								for (var friendIdx in users[idx].friends) {
-									if (name === users[idx].friends[friendIdx])
+									if (name == users[idx].friends[friendIdx].name)
 										idxInFriends = friendIdx;
 								}
 								var lastMsgHis = users[idx].friends[idxInFriends].lastMsgId;
@@ -111,10 +115,10 @@ router.post('/login', bodyParser.json(), function(req, res) {
 								friendList.push({'name': users[idx].name, '_id': users[idx]._id, 'numUnreadMsgs': numUnreadMsgs});
 							}
 						}
-						res.json('username': name, 'icon': icon, 'friendList': friendList);
+						res.json({'username': name, 'icon': icon, 'friendList': friendList});
 					} else {
 						// database operation error
-						res.send({'errorMessage': error});
+						res.send({'errorMessage': error + " - Error loading friend of this user."});
 					}
 				});
 			} else {
@@ -123,7 +127,7 @@ router.post('/login', bodyParser.json(), function(req, res) {
 			}
 		} else {
 			// database operation error
-			res.send({'errorMessage': error});
+			res.send({'errorMessage': error + " - Error loading user list."});
 		}
 	});
 });
@@ -139,12 +143,12 @@ router.get('/logout', function(req, res) {
 			// update the status to be offline
 			userList.update({'_id': req.session.userID}, {'status': 'offline'}, function(error, returnValue) {
 				if (error != null) {
-					res.send({'errorMessage': error});
+					res.send({'errorMessage': error + " - Error updating status of this user!"});
 				}
 			});
 		} else {
 			// database operation error
-			res.send({'errorMessage': error});
+			res.send({'errorMessage': error + " - Error finding this user in user list!"});
 		}
 	});
 
@@ -171,14 +175,14 @@ router.get('/getuserinfo', function(req, res, next) {
 });
 
 /* Handle PUT request for updating user information. */
-router.put('/saveuserinfo', bodyParser.json(), function(req, res) {
+router.put('/saveuserinfo', function(req, res) {
 	var db = req.db;
 	var userList = db.get("userList");
 
 	userList.find({'_id': req.session.userID}, {}, function(error, loginUser) {
 		if (error === null) {
 			// update the mobileNumber, homeNumber and address
-			userList.update({'_id': req.session.userID}, {'mobileNumber': req.body.mobileNumber, 'homeNumber': req.body.homeNumber, 'address': req.body.address}, function(error, returnValue) {
+			userList.update({'_id': req.session.userID}, {$set:{'mobileNumber': req.body.mobileNumber, 'homeNumber': req.body.homeNumber, 'address': req.body.address}}, function(error, returnValue) {
 				if (error != null) {
 					res.send({'errorMessage': error});
 				}
@@ -216,39 +220,42 @@ router.get('/getconversation/:friendid', function(req, res) {
 			// retrieve all messages
 			messageList.find({'senderId': {$in: [friendid, myid]}, 'receiverId': {$in: [friendid, myid]}}, {}, function(error, messages) {
 				if (error === null) {
-					allMessages = messages;
-					lastMsgId = messages[messages.length - 1]._id;
+					if (messages === null || messages.length == 0) {
+						res.json({'username': friendName, 'icon': icon, 'status': status, 'message': []});
+					} else {
+						allMessages = messages;
+						lastMsgId = messages[messages.length - 1]._id;
+						// update lastMsgId
+						userList.update({'_id': myid, "friends.name": friendName}, {$set:{'friends.$.lastMsgId': lastMsgId}}, function(error, returnValue) {
+							if (error != null) {
+								res.send({'errorMessage': error + " - Error updating lastMsgId!"});
+							} else {
+								// send json results
+								res.json({'username': friendName, 'icon': icon, 'status': status, 'messages': allMessages, 'returnValue': returnValue});
+							}
+						});
+					}
 				} else {
 					// database operation error
-					res.send({'errorMessage': error});
+					res.send({'errorMessage': error + " - Error retrieving message list!"});
 				}
 			});
-
-			// update lastMsgId
-			userList.update({'_id': myid, "friends.name": friendName}, {'friends.lastMsgId': lastMsgId}, function(error, returnValue) {
-				if (error != null) {
-					res.send({'errorMessage': error});
-				}
-			});
-
-			// send json results
-			res.json({'icon': icon, 'status': status, 'messages': messages});
 		} else {
 			// database operation error
-			res.send({'errorMessage': error});
+			res.send({'errorMessage': error + " - Error retrieving user list!"});
 		}
 	});
 });
 
 
 /* Handle POST request for posting new messages to friendid. */
-router.post('/postmessage/:friendid', bodyParser.json(), function(req, res) {
+router.post('/postmessage/:friendid', function(req, res) {
 	var friendid = req.params.friendid;
 	var message = req.body.message;
 	var date = req.body.date;
 	var time = req.body.time;
 	var db = req.db;
-	var userList = db.get("userList");  // [TODO] do i have to update the lastid of mine ?
+	// [TODO] do i have to update the lastid of the sender ?
 	var messageList = db.get("messageList");
 
 	var objectToInsert = {'senderId': req.session.userID, 'receiverId': friendid, 'message': message, 'date': date, 'time': time};
@@ -310,7 +317,7 @@ router.get('/getnewmessages/:friendid', function(req, res) {
 		if (error === null) {
 			// update lastMsgId
 			lastMsgId = newMessages[newMessages.length - 1]._id;
-			userList.update({'_id': req.session.userID, 'friends.name': friendName}, {'friends.lastMsgId': lastMsgId}, function(error, returnValue) {
+			userList.update({'_id': req.session.userID, 'friends.name': friendName}, {$set:{'friends.$.lastMsgId': lastMsgId}}, function(error, returnValue) {
 				if (error === null) {
 					res.send({'newMessages': newMessages});
 				} else {

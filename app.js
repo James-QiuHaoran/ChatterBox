@@ -4,30 +4,31 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var session = require('express-session');
 var bodyParser = require('body-parser');
+var chats = require('./routes/chats.js');
 
 // Database Connection
 var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk('localhost:27017/assignment2');
 
-var chatPage = require('./routes/chats');
-
 var app = express();
+
+// configure body parser
+app.use(bodyParser.json());                          // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true }));  // support encoded bodies
 
 app.use(favicon(path.join(__dirname, 'public/images', 'favicon.ico')));
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(session({secret: 'RANDOMSTRINGGOESHERESEMAJ'}));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Make our db accessible to our router
+// make our db accessible to our router
 app.use(function(req,res,next){
 	req.db = db;
 	next();
 });
 
-app.use('/', chatPage);
+app.use('/', chats);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -44,7 +45,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.json({'error': err});
 });
 
 module.exports = app;
