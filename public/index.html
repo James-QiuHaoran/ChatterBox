@@ -6,6 +6,7 @@
 	<!-- Imported Files -->
 	<link rel="stylesheet" href="/stylesheets/mystyles.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="/javascripts/myscripts.js"></script>
 
 	<!-- icon -->
@@ -39,21 +40,22 @@
 		<div id="friendList">
 			<h4>&nbspMy Friends:</h4>
 			<ul>
-				<li ng-repeat="friend in friends" ng-if="friend.numUnreadMsgs > 0" ng-click="loadConversation(friend._id)" class="{{(friend._id === selectedFriend._id)?'selected':''}}" id="{{friend._id}}"> {{friend.name}} ({{friend.numUnreadMsgs}})</li>
-              	<li ng-repeat="friend in friends" ng-if="friend.numUnreadMsgs == 0" ng-click="loadConversation(friend._id)" class="{{(friend._id === selectedFriend._id)?'selected':''}}" id="{{friend._id}}"> {{friend.name}}</li>
+				<li ng-repeat="friend in friends" ng-if="friend.unreadMsgNumber > 0" ng-click="loadConversation(friend._id)" class="{{(friend._id === selectedFriend._id)?'selected':''}}" id="{{friend._id}}"> {{friend.name}} ({{friend.unreadMsgNumber}})</li>
+              	<li ng-repeat="friend in friends" ng-if="friend.unreadMsgNumber < 0" ng-click="loadConversation(friend._id)" class="{{(friend._id === selectedFriend._id)?'selected':''}}" id="{{friend._id}}"> {{friend.name}}</li>
 			</ul>
 		</div>
-		<div id="conversation">
+		<div id="conversation" scroll-bottom="messages">
 			<h3 ng-hide="notSelect"><img id='selectedUserIcon' ng-src="{{selectedFriend.icon}}" ng-if="notLogin === false"></img>&nbsp&nbsp{{selectedFriend.username}} ({{selectedFriend.status}})</h3>
 
-			<div ng-hide="notSelect" id="messages">
+			<div ng-hide="notSelect" id="messages" scroll-bottom="messages">
 				<p ng-if="messages.length == 0">No Messages Yet ... Enter a message to chat with {{selectedFriend.username}}!</p>
 				<p ng-repeat="sentence in messages" id="sentence._id" ng-dblClick="deleteMessage(sentence._id)">
-					<span ng-if="sentence.sentByMe === true"> 
-						<span class="fromHim"><img id='selectedUserIconInConversation' ng-src="{{selectedFriend.icon}}" ng-if="notLogin === false"></img>&nbsp&nbsp {{sentence.message}}</span> <span class="time">{{sentence.time}}</span><br><br>
+					<span ng-if="sentence.onlydate != null" class="date">- {{sentence.date}} -</span>
+					<span ng-if="sentence.sentByMe === false"> 
+						<span class="fromHim"><img id='selectedUserIconInConversation' ng-src="{{selectedFriend.icon}}" ng-if="notLogin === false"></img>&nbsp&nbsp {{sentence.message}}</span> <span class="time">[{{sentence.time}}]</span><br><br>
 					</span>
 					<span ng-if="sentence.sentByMe === true">
-						<span class="time">{{sentence.time}}</span>
+						<span class="time">[{{sentence.time}}]</span>
 						<span class="fromMe">{{sentence.message}}&nbsp&nbsp&nbsp</span><br><br>
 					</span>
 				</p>

@@ -1,6 +1,21 @@
 var chatterBox_app = angular.module('chatterBox', []);
 
-chatterBox_app.controller('chatterBoxController', function($scope, $http, $interval) {
+chatterBox_app.directive('schrollBottom', function () {
+  return {
+    scope: {
+      schrollBottom: "="
+    },
+    link: function (scope, element) {
+      scope.$watchCollection('schrollBottom', function (newValue) {
+        if (newValue)
+        {
+          $(element).scrollTop($(element)[0].scrollHeight);
+        }
+      });
+    }
+  }
+})
+.controller('chatterBoxController', function($scope, $http, $interval) {
 	// true for not logged in and false otherwise
 	$scope.notLogin = true;
 
@@ -13,6 +28,7 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 	// selected friend
 	$scope.selectedFriend = {'username': '', '_id': '', 'icon': '', 'status': ''};
 	$scope.messages = [];
+	$scope.allMSGIDs = [];
 
 	// friend list, storing information of friends of the current user
 	// each element in this array should have the same structure with selectedFriend
@@ -23,15 +39,8 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 
 	// login error message
 	$scope.loginErrorMsg = "Welcome to Chatter Box!";
-/*
-	// periodically update conversations for every 1 second
-	$scope.promise = $interval(function() {
-		if ($scope.notLogin === false) {
-			$scope.updateConversations();
-		}
-	}, 1000);
-*/
 
+	// user inputs
 	$scope.userInput = {'username': '', 'password': ''};
 	$scope.messageText = "";
 
@@ -46,6 +55,7 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 				$scope.selectedFriend = {'username': '', '_id': '', 'icon': '', 'status': ''};
 				$scope.friends = [];
 				$scope.messages = [];
+				$scope.allMSGIDs = [];
 				$scope.isCurrentUser = false;
 				$scope.loginErrorMsg = "Welcome to Chatter Box!";
 			} else {
@@ -112,6 +122,7 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 				$scope.selectedFriend = {'username': '', '_id': '', 'icon': '', 'status': ''};
 				$scope.friends = [];
 				$scope.messages = [];
+				$scope.allMSGIDs = [];
 				$scope.isCurrentUser = false;
 				$scope.loginErrorMsg = "Welcome to Chatter Box!";
 
@@ -150,6 +161,7 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 			if (response.data === "") {
 				// save succeeded
 				alert("User information successfully updated!")
+				$scope.displayUserInfo();
 			} else {
 				alert(response.data.errorMessage);
 			}
@@ -161,8 +173,10 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 	// load a conversation when the name of a friend is clicked
 	$scope.loadConversation = function(friendID) {
 		$scope.selectedFriend._id = friendID;
+		console.log($scope.selectedFriend._id);
 		$scope.notSelect = false;
 		$scope.isCurrentUser = false;
+		$scope.messageText = "";
 		$http.get("/getconversation/" + friendID).then(function(response) {
 			if (response.data.icon) {
 				// successfully returned
@@ -170,11 +184,17 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 				$scope.selectedFriend.icon = response.data.icon;
 				$scope.selectedFriend.status = response.data.status;
 				$scope.messages = response.data.messages;
+				$scope.dates = [];
 				for (var idx in $scope.messages) {
-					if ($scope.messages[idx].senderId == $scope.selectedFriend._id)
-						$scope.messages[idx].sentByMe = false;
-					else
-						$scope.messages[idx].sentByMe = true;
+					if ($scope.messages[idx].onlydate == null) {
+						if ($scope.messages[idx].senderId == $scope.selectedFriend._id)
+							$scope.messages[idx].sentByMe = false;
+						else
+							$scope.messages[idx].sentByMe = true;	
+						$scope.allMSGIDs.push($scope.messages[idx]._id);
+					} else {
+						$scope.dates.push($scope.messages[idx].date);
+					}
 				}
 				console.log($scope.messages);
 			} else {
@@ -200,8 +220,8 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 			} else {
 				// successfully posted
 				$scope.messageText = "";
-				alert("Message successfully sent!");
 				$scope.loadConversation(friendID);
+				alert("Message successfully sent!");
 			}
 		}, function(response) {
 			alert("Error posting new message!");
@@ -210,26 +230,30 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 
 	// delete a message when a message is double clicked
 	$scope.deleteMessage = function(msgID) {
-		if (confirm("Are you show to delete this message?")) {
+		if (confirm("Are you sure to delete this message?")) {
 			$http.delete("/deletemessage/" + msgID).then(function(response) {
+				console.log("response: " + response.data);
 				if (response.data === "") {
 					// successfully deleted
 					// find the index to delete
 					var messageToDelete = 0;
 					for (var idx in $scope.messages) {
-						if ($scope.messages[idx]._id === msgID) {
+						if ($scope.messages[idx].onlydate == null && $scope.messages[idx]._id === msgID) {
 							messageToDelete = idx;
 						}
 					}
 					// delete the message from the list
+					console.log("message idx to delete is: " + messageToDelete);
+					var idx_to_remove = $scope.allMSGIDs.indexOf(msgID);
+					$scope.allMSGIDs.splice(idx_to_remove, 1);
 					$scope.messages.splice(messageToDelete, 1)
-					$scope.loadConversation($selectedFriend._id);
+					$scope.updateConversations();
 					alert("Message successfully deleted!");
 				} else {
 					alert(response.data.errorMessage);
 				}
 			}, function(response) {
-				alert("Error deleting a message!");
+				alert("Error deleting a message!" +  response.status);
 			});
 		}
 	};
@@ -237,31 +261,82 @@ chatterBox_app.controller('chatterBoxController', function($scope, $http, $inter
 	// update conversations periodically
 	$scope.updateConversations = function() {
 		// for selected friend
-		$http.get("/getnewmessages/" + $scope.selectedFriend._id).then(function(response) {
-			if (response.data.newMessages) {
-				// successfully retrieved new nessages
-				for (var idx in response.data.newMessages) {
-					$scope.messages.append(response.data.newMessages[idx]);
-				}
-			} else {
-				alert(response.data.errorMessage);
-			}
-		}, function(response) {
-			alert("Error loading new messages for current conversation window!");
-		});
+		if (!$scope.notSelect) {
+			console.log($scope.selectedFriend._id);
+			$http.get("/getnewmessages/" + $scope.selectedFriend._id).then(function(response) {
+				if (response.data.allMessages) {
+					// successfully retrieved all messages
+					// update friend status
+					$scope.selectedFriend.status = response.data.status;
+					var allIDs = [];
+					for (var idx = 0; idx < response.data.allMessages.length; idx++)
+						allIDs.push(response.data.allMessages[idx]._id);
 
-		// for unselected friends in the list
-		for (var idx in $scope.friends) {
-			$http.get("/getnewmsgnum/" + $scope.friends[idx]).then(function(response) {
-				if (response.data.errorMessage) {
-					alert(response.data.errorMessage);
-					$scope.friends[idx].unreadMsgNumber = '';
+					// remove messages deleted by the other friend
+					for (var idx = 0; idx < $scope.messages.length; idx++) {
+						console.log("idx: " + idx + " message: " + $scope.messages[idx].onlydate);
+						if (idx == ($scope.messages.length-1) && $scope.messages[idx].onlydate != null)
+							$scope.messages.splice(idx, 1);
+						else if (idx != ($scope.messages.length-2) && $scope.messages[idx].onlydate != null && $scope.messages[idx+1].onlydate != null) {
+							var idx_to_remove = $scope.dates.indexOf($scope.messages[idx].date);
+							$scope.dates.splice(idx_to_remove, 1);
+							$scope.messages.splice(idx, 1);
+							idx--;
+						} else if ($scope.messages[idx].onlydate == null && allIDs.indexOf($scope.messages[idx]._id) == -1) {
+							var idx_to_remove = $scope.allMSGIDs.indexOf($scope.messages[idx]._id);
+							$scope.allMSGIDs.splice(idx_to_remove, 1);
+							$scope.messages.splice(idx, 1);
+							idx -= 2;
+							if (idx < 0)
+								idx = 0;
+						}
+					}
+
+					// add new messages
+					for (var idx = 0; idx < response.data.allMessages.length; idx++) {
+						if ($scope.allMSGIDs.indexOf(response.data.allMessages[idx]._id) == -1) {
+							// add to message list
+							if ($scope.dates.indexOf(response.data.allMessages[idx].date) == -1) {
+								$scope.messages.push({'onlydate': "onlydate", 'date': response.data.allMessages[idx].date});
+								$scope.dates.push(response.data.allMessages[idx].date);
+							}
+							$scope.messages.push(response.data.allMessages[idx]);
+							$scope.allMSGIDs.push(response.data.allMessages[idx]._id);
+						}
+					}
+					$scope.loadConversation($scope.selectedFriend._id);
 				} else {
-					$scope.friends[idx].unreadMsgNumber = '(' + response.data + ')';
+					alert(response.data.errorMessage);
 				}
 			}, function(response) {
-				alert("Error loading number of new messages for unselected friends!");
+				alert("Error loading new messages for current conversation window!");
 			});
 		}
+
+		// for friends in the list
+		console.log($scope.friends);
+		$scope.friends.forEach(function(friend) {
+			$http.get("/getnewmsgnum/" + friend._id).then(function(response) {
+				if (response.data.errorMessage) {
+					alert(response.data.errorMessage);
+					$scope.friend.unreadMsgNumber = '';
+				} else {
+					if (response.data.number > 0)
+						friend.unreadMsgNumber = response.data.number;
+					else
+						friend.unreadMsgNumber = -1;
+					console.log(" " + friend.name + " " + friend.unreadMsgNumber);
+				}
+			}, function(response) {
+				alert("Error loading number of new messages for friend list!");
+			});
+		});
 	};
+
+	// periodically update the conversations
+	$interval(function() {
+		if ($scope.notLogin === false) {
+			$scope.updateConversations();
+		}
+	}, 1000);
 });

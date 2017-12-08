@@ -11,12 +11,14 @@ var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk('localhost:27017/assignment2');
 
+// create
 var app = express();
 
 // configure body parser
 app.use(bodyParser.json());                          // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true }));  // support encoded bodies
 
+// other module loaded to support all middlewares
 app.use(favicon(path.join(__dirname, 'public/images', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(session({secret: 'RANDOMSTRINGGOESHERESEMAJ'}));
@@ -28,6 +30,7 @@ app.use(function(req,res,next){
 	next();
 });
 
+// use chats.js to handle requests for localhost:3000
 app.use('/', chats);
 
 // catch 404 and forward to error handler

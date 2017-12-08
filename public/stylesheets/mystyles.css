@@ -164,19 +164,24 @@ li:hover {
   background: #4286f4;
 }
 
-div#conversation{
+#conversation{
   display:inline-block;
   border: 2px solid black;
   vertical-align:top;
   width:800px;
   height:500px;
-  overflow-y:scroll;
+  /*overflow-y:scroll;*/
+  overflow: scroll;
   box-shadow: 5px 5px 2px lightblue;
   border-radius: 5px;
   margin-top:5px;
   margin-bottom: 40px;
   padding: 15px;
 }
+/*
+#messages {
+  overflow: scroll;
+}*/
 
 #textMessageArea {
     margin-left: 150px;
@@ -201,6 +206,18 @@ div#conversation{
     border-radius: 12px;
     box-shadow: 0 4px #999;
     margin-left: 650px;
+}
+
+.date {
+  margin-left: 250px;
+  font-size: 16px;
+  font-family: serif;
+  color: gray;
+}
+
+.time {
+  font-size: 16px;
+  font-family: serif;
 }
 
 .save_button:hover {
